@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mass</title>
+  </head>
+  <body>
+    <div id="app">
+      <!-- 插值绑定 -->
+      <p>{{name}}</p>
+      <!-- 指令解析 -->
+      <p m-text="name"></p>
+      <p>{{age}}</p>
+      <p>
+        {{doubleAge}}
+      </p>
+      <div m-for="(item, index) in list1" :key="index">{{item}}</div>
+      <div class="list2 list" m-for="(item, index) in list2" :key="item.id">{{item._name}}</div>
+      <div class="m-if" m-if="if_show">这是m-if</div>
+      <div class="m-show" m-show="show_show">这是m-show</div>
+      <!-- 双向绑定 -->
+      <input type="text" m-model="name" />
+      <!-- 事件处理 -->
+      <button @click="changeName">呵呵</button>
+      <!-- html内容解析 -->
+      <div m-html="html"></div>
+    </div>
+    <script src="./compile.js"></script>
+    <script src="./mvue.js"></script>
+
+    <script>
+      const mass = new MVue({
+        el: "#app",
+        data: {
+          name: "I am test.",
+          show_show: true,
+          if_show: true,
+          age: 12,
+          html: "<button>这是一个按钮</button>",
+          list1: ['111', '222', '333'],
+          list2: [{
+            id: 1,
+            _name: '张三'
+          }, {
+            id: 2,
+            _name: '李四'
+          }, {
+            id: 3, 
+            _name: '王五'
+          }]
+        },
+        created() {
+          setTimeout(() => {
+            this.name = "我是生命周期的created";
+            this.if_show = false;
+            this.show_show = false;
+            this.list1 = ['888', 'aaaa', 'aab', 'ddd'];
+            this.list2 = [{
+            id: 1,
+            _name: '张三'
+            }, {
+              id: 2,
+              _name: '李四'
+            }, {
+              id: 3, 
+              _name: '王五'
+            }, {
+              id: 4,
+              _name: '胡巴'
+            }];
+            }, 1500);
+        },
+        methods: {
+          changeName() {
+            this.name = "我是methods";
+            this.age = 1;
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
