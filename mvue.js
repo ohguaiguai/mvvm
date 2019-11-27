@@ -41,10 +41,9 @@ class MVue {
           for (let i = 0; i < arguments.length; i++) {
               that.observe(arguments[i]);
           }
-          console.log(this.__dep__);
+          // console.log(this.__dep__);
           const dep = this.__dep__;
           let res = Array.prototype[method].apply(this, arguments);
-          console.log('res', res);
           dep.notify();
           return res;
       }
@@ -69,7 +68,7 @@ class MVue {
     Object.defineProperty(obj, key, {
       get() {
         Dep.target && dep.addDep(Dep.target);
-        console.log(`读取${key}`);
+        // console.log(`读取${key}`);
         return value;
       },
       set(newVal) {
@@ -111,13 +110,13 @@ class MVue {
     }
 
     const dep = new Dep();
+    this.def(obj, '__dep__', dep);
 
     Object.defineProperty(obj, key, {
       get() {
         Dep.target && dep.addDep(Dep.target);
         console.log(`读取${key}`)
         // console.log(Dep.target)
-        // console.log(dep)
         return val;
       },
       set(newVal) {
@@ -166,7 +165,6 @@ class Watcher {
       this.vm = vm;
       this.key = key;
       this.cb = cb;
-      console.log(this);
     // 将当前watcher实例指定到Dep静态属性target
     Dep.target = this;
     this.vm[this.key]; // 触发getter，添加依赖
@@ -174,8 +172,7 @@ class Watcher {
   }
 
   update() {
-    console.log("属性更新了");
-    console.log(this.vm[this.key]);
+    // console.log("属性更新了");
     this.cb.call(this.vm, this.vm[this.key]);
   }
 }

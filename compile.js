@@ -42,7 +42,6 @@ class Compile {
           const attrName = attr.name; //属性名
           const exp = attr.value; // 属性值
           if (this.isDirective(attrName)) {
-            console.log(attrName)
             // m-text
             const dir = attrName.substring(2);
             // 执行指令
@@ -269,5 +268,15 @@ class Compile {
   }  
   insertAfter(newNode, referenceNode) {
     referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
+  }
+  getValueVByPath(obj, path) {
+    let paths = path.split('.');// [xxx, yyy, zzz]
+
+    let res = obj;
+    let prop;
+    while(prop = paths.shift()) {
+      res = res[prop];
+    }
+    return res;
   }
 }
