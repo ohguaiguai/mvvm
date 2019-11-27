@@ -1,22 +1,17 @@
-// new MVue({data:{...}})
 
 class MVue {
   constructor(options) {
     this.$options = options;
 
-    // 数据响应化
     this.$data = options.data;
+
+    // 代理
     Object.keys(this.$data).forEach(key => {
       this.proxyData(key);
     });
-    this.observe(this.$data);
 
-    // 模拟一下watcher创建
-    // new Watcher();
-    // // 通过访问test属性触发get函数，添加依赖
-    // this.$data.test;
-    // new Watcher();
-    // this.$data.foo.bar;
+    // 数据响应化
+    this.observe(this.$data);
 
     new Compile(options.el, this);
 
@@ -26,28 +21,103 @@ class MVue {
     }
   }
 
-  observe(value) {
-    if (!value || typeof value !== "object") {
+  reactiveArray() {
+    let ARRAY_METHODS = [
+      'push',
+      'pop',
+      'shift',
+      'unshift',
+      'reverse',
+      'sort',
+      'splice'
+    ];
+    let array_methods =  Object.create(Array.prototype);
+    const that  = this;
+    ARRAY_METHODS.forEach((method) => {
+      array_methods[method] = function() {
+          // 调用原来的方法
+          console.log('调用的是拦截的' + method + '方法');
+          // 将新加入的数据进行响应式化
+          for (let i = 0; i < arguments.length; i++) {
+              that.observe(arguments[i]);
+          }
+          console.log(this.__dep__);
+          const dep = this.__dep__;
+          let res = Array.prototype[method].apply(this, arguments);
+          console.log('res', res);
+          dep.notify();
+          return res;
+      }
+    });
+
+    return array_methods;
+  }
+  
+
+   def (obj, key, val) {
+    Object.defineProperty(obj, key, {
+      value: val,
+      enumerable: true,
+      writable: true,
+      configurable: true
+    });
+  }
+
+  defineReactive$1 (obj, key, value) {
+    const dep = new Dep();
+    this.def(value, '__dep__', dep);
+    Object.defineProperty(obj, key, {
+      get() {
+        Dep.target && dep.addDep(Dep.target);
+        console.log(`读取${key}`);
+        return value;
+      },
+      set(newVal) {
+        value = newVal;
+        dep.notify();
+      } 
+    });
+  }
+
+  observe(o) {
+    if (!o || typeof o !== 'object') {
       return;
     }
-
-    // 遍历该对象
-    Object.keys(value).forEach(key => {
-      this.defineReactive(value, key, value[key]);
-    //   代理data中的属性到vue实例上
-      // this.proxyData(key);
-    });
+     
+    let keys = Object.keys(o);
+    for (let i = 0; i < keys.length; i++) {
+      let key = keys[i];
+      let value = o[key];
+      // 数组、对象本身做处理
+      if (typeof value === 'object') {
+        this.defineReactive$1(o, key, value);
+      }
+      // 如果是数组
+      if (Array.isArray(value)) {
+        value.__proto__ = this.reactiveArray();
+        for (let j = 0; j < value.length; j++) {
+          this.observe(value[j]);
+        }
+      } else { // 基本类型或者对象
+        this.defineReactive(o, key, value);
+      }
+    }
   }
 
   // 数据响应化
   defineReactive(obj, key, val) {
-    this.observe(val); // 递归解决数据嵌套
+    if (typeof val === 'object' && value != null ) {
+      this.observe(val);
+    }
 
     const dep = new Dep();
 
     Object.defineProperty(obj, key, {
       get() {
         Dep.target && dep.addDep(Dep.target);
+        console.log(`读取${key}`)
+        // console.log(Dep.target)
+        // console.log(dep)
         return val;
       },
       set(newVal) {
@@ -55,7 +125,7 @@ class MVue {
           return;
         }
         val = newVal;
-        // console.log(`${key}属性更新了：${val}`);
+        console.log(`${key}属性更新了：${val}`);
         dep.notify();
       }
     });
@@ -96,7 +166,7 @@ class Watcher {
       this.vm = vm;
       this.key = key;
       this.cb = cb;
-
+      console.log(this);
     // 将当前watcher实例指定到Dep静态属性target
     Dep.target = this;
     this.vm[this.key]; // 触发getter，添加依赖
@@ -104,7 +174,9 @@ class Watcher {
   }
 
   update() {
-    // console.log("属性更新了");
+    console.log("属性更新了");
+    console.log(this.vm[this.key]);
     this.cb.call(this.vm, this.vm[this.key]);
   }
 }
+

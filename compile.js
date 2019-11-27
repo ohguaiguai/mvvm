@@ -42,6 +42,7 @@ class Compile {
           const attrName = attr.name; //属性名
           const exp = attr.value; // 属性值
           if (this.isDirective(attrName)) {
+            console.log(attrName)
             // m-text
             const dir = attrName.substring(2);
             // 执行指令
