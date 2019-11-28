@@ -104,7 +104,6 @@ class Compile {
       node.parentNode.removeChild(node);
     }
   }
-  // m-for="(item, index) in list" :key="index"   {{item.a.b.c}}
   for(node, vm, exp) {
     // let rkuohao = /\{\{(.+?)\}\}/g;
     // list
@@ -120,16 +119,14 @@ class Compile {
     }
     // item.a.b.c 插值部分 = > a.b.c
     let content = node.innerText.replace('{{', '').replace('}}', '').trim().split('.').shift().join('.');
-    let item_index = exp.match(/(\(\w+\,\s*\w+\)|\w+)/g)[0].replace(/(\s+|\(|\))/g, '').split(',');
+    /* let item_index = exp.match(/(\(\w+\,\s*\w+\)|\w+)/g)[0].replace(/(\s+|\(|\))/g, '').split(',');
     // item
     let item = item_index[0];
     // index
-    let index = item_index[1];
+    let index = item_index[1]; */
     let value = vm[target];
     const fragment = document.createDocumentFragment();
     let className = '';
-    let isObj = false;
-    let key = null;
 
     for (let i = 0; i < value.length; i++) {
       let li = document.createElement(node.tagName);
@@ -166,29 +163,33 @@ class Compile {
     }
 
     node.parentNode.replaceChild(fragment, node);
-     // 对 list 本身 做依赖收集
+
+    // 对 list 本身 做依赖收集
     new Watcher(vm, target, (value) => {
         this.forUpdater(value, {
-          isObj, 
-          bindKey,
           className,
-          key
+          bindKey,
+          content
         });
     });
   }
 
   forUpdater(value, options) {
-    const {isObj, bindKey, className, key} = options;
+    const {bindKey, content, className} = options;
+
     let lis = document.getElementsByClassName(className);
     let node = lis[0];
     let lisLen = lis.length;
     let listLen = value.length;
     let diffLen = Math.abs(lisLen - listLen);
 
+    let isObj = this.isObject(value[0]);
+
     for (let i = 0; i < Math.min(lisLen, listLen); i ++) {
       if (isObj) {
-        if (lis[i].innerText != value[i][key]) {
-          lis[i].innerText = value[i][key];
+        let val = this.getValueVByPath(value[i], content);
+        if (lis[i].innerText != val) {
+          lis[i].innerText = val;
         }
       } else {
         if (lis[i].innerText != value[i]) {
@@ -199,17 +200,21 @@ class Compile {
 
     if (lisLen < listLen) {
       const fragment = document.createDocumentFragment();
+
       for (let i = 0; i < diffLen; i++) {
         let li = document.createElement(node.tagName);
         li.classList.add(...node.classList);
         let cursor = lisLen + i;
-        if (isObj) {
-          value[cursor].hasOwnProperty(bindKey) 
-          ? li.dataset.key = value[cursor][bindKey]
-          : li.dataset.key = cursor
-          li.innerText = value[cursor][key];
-        } else {
+
+        if (bindKey == 'index') {
           li.dataset.key = cursor;
+        } else {
+          li.dataset.key = this.getValueVByPath(value[cursor], bindKey);
+        }
+
+        if (isObj) {
+          li.innerText = this.getValueVByPath(value[cursor], content)
+        } else {
           li.innerText = value[cursor];
         }
         fragment.appendChild(li);
