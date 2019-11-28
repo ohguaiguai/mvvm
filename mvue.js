@@ -167,13 +167,53 @@ class Watcher {
       this.cb = cb;
     // 将当前watcher实例指定到Dep静态属性target
     Dep.target = this;
-    this.vm[this.key]; // 触发getter，添加依赖
+    this.vm[this.key]; 
     Dep.target = null;
   }
 
   update() {
     // console.log("属性更新了");
     this.cb.call(this.vm, this.vm[this.key]);
+  }
+}
+
+class ArrayWatcher {
+  constructor(vm, option, cb) {
+      this.vm = vm;
+      this.option = option;
+      this.key = option.key;
+      this.index = option.index;
+      this.paths = option.paths;
+      this.cb = cb;
+      // 将当前watcher实例指定到Dep静态属性target
+      Dep.target = this;
+      // 触发getter，添加依赖
+      // 处理list,i,a.b.c.d...这种情况
+
+      let res = this.vm[this.key][this.index];
+      let prop;
+      while (prop = this.paths.shift()) {
+        res = res[prop];
+      }
+     
+      Dep.target = null;
+  }
+
+  update() {
+    console.log("数组的某一项的某个属性更新了");
+
+    this.cb.call(this.vm, this.getValueVByPath(this.vm[this.key][this.index], this.paths));
+  }
+
+  getValueVByPath(obj, path) {
+    let paths = path.split('.');// [xxx, yyy, zzz]
+
+    let res = obj;
+    let prop;
+    while(prop = paths.shift()) {
+      res = res[prop];
+    }
+    return res;
   }
 }
 

@@ -104,14 +104,22 @@ class Compile {
       node.parentNode.removeChild(node);
     }
   }
-  // m-for="(item, index) in list" :key="index"
+  // m-for="(item, index) in list" :key="index"   {{item.a.b.c}}
   for(node, vm, exp) {
+    // let rkuohao = /\{\{(.+?)\}\}/g;
     // list
     let target = exp.match(/\bin\b\s+\b\w+\b/g)[0].replace('/\s+/g', '').replace('in', '').trim();
     // ['', '', '']  [{}, {}, {}]
-    let bindKeys = node.getAttribute('m-bind:key') || node.getAttribute(':key').split('.');
-    let bindKey = bindKeys.length > 1 ? bindKeys[1] : bindKeys[0];
-    let content = node.innerText.replace('{{', '').replace('}}', '').trim();
+    // index 或者 item.a.b.c
+    let bindContent = node.getAttribute('m-bind:key') || node.getAttribute(':key');
+    let bindKey = '';
+    if (bindContent == 'index')  {
+        bindKey = 'index';
+    } else {
+      bindKey = bindContent.trim().split('.').shift().join('.');
+    }
+    // item.a.b.c 插值部分 = > a.b.c
+    let content = node.innerText.replace('{{', '').replace('}}', '').trim().split('.').shift().join('.');
     let item_index = exp.match(/(\(\w+\,\s*\w+\)|\w+)/g)[0].replace(/(\s+|\(|\))/g, '').split(',');
     // item
     let item = item_index[0];
@@ -127,23 +135,38 @@ class Compile {
       let li = document.createElement(node.tagName);
       className = `mass-data-${target}`
       li.classList.add(...node.classList, className);
+
       if (this.isPrimitive(value[i])) {
         li.dataset.key = i;
         li.innerText = value[i];
       } 
+
       if (this.isObject(value[i])) {
         isObj = true;
-        value[i].hasOwnProperty(bindKey) 
-          ? li.dataset.key = value[i][bindKey]
-          : li.dataset.key = i
-        key = content.split('.')[1];
-        li.innerText = value[i][key];
+        if (bindKey == 'index') {
+          li.dataset.key = i;
+        } else {
+          li.dataset.key = this.getValueVByPath(value[i], bindKey);
+        }
+       
+        li.innerText = this.getValueVByPath(value[i], content);
+        // 给某一个属性添加依赖收集，触发该属性的getter时才可以通知更新页面
+        // content 可以是 a.b， 也可以是 a.b.c, 最终绑定依赖的目标应该是属性 c 
+        // target 就是 list 
+        new ArrayWatcher(vm, {
+          key: target,
+          index: i,
+          paths: content
+        }, (value) => {
+          li.innerText = value;
+        });
       }
+
       fragment.appendChild(li);
     }
 
     node.parentNode.replaceChild(fragment, node);
-     // 依赖收集
+     // 对 list 本身 做依赖收集
     new Watcher(vm, target, (value) => {
         this.forUpdater(value, {
           isObj, 
