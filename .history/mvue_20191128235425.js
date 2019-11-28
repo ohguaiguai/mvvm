@@ -115,7 +115,7 @@ class MVue {
     Object.defineProperty(obj, key, {
       get() {
         Dep.target && dep.addDep(Dep.target);
-        // console.log(`读取${key}`)
+        console.log(`读取${key}`)
         // console.log(Dep.target)
         return val;
       },
@@ -172,7 +172,7 @@ class Watcher {
   }
 
   update() {
-    console.log("Watcher 属性更新了");
+    console.log("Wather 属性更新了");
     this.cb.call(this.vm, this.vm[this.key]);
   }
 }

@@ -192,6 +192,7 @@ class Compile {
 
   forUpdater(value, options) {
     const {vm, target, tagName, identifier, bindKey, content} = options;
+    debugger;
     let lis = document.getElementsByTagName(tagName);
     let nodes = Array.prototype.filter.call(lis, (item) => {
       return item.identifier == identifier;
@@ -202,7 +203,7 @@ class Compile {
     let diffLen = Math.abs(nodesLen - valueLen);
 
     let isObj = this.isObject(value[0]);
-
+    
     if (nodesLen == valueLen) {
       for (let i = 0; i < Math.min(nodesLen, valueLen); i++) {
         if (isObj) {
@@ -237,7 +238,6 @@ class Compile {
           li.innerText = value[cursor];
         }
         fragment.appendChild(li);
-        this.insertAfter(fragment, nodes[nodesLen - 1]);
 
         new ArrayWatcher(vm, {
           key: target,
@@ -247,6 +247,7 @@ class Compile {
           li.innerText = value;
         });
       }
+      this.insertAfter(fragment, nodes[nodesLen - 1]);
     }
 
     if (nodesLen > valueLen) {

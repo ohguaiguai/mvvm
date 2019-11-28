@@ -115,7 +115,7 @@ class MVue {
     Object.defineProperty(obj, key, {
       get() {
         Dep.target && dep.addDep(Dep.target);
-        // console.log(`读取${key}`)
+        console.log(`读取${key}`)
         // console.log(Dep.target)
         return val;
       },
@@ -172,13 +172,14 @@ class Watcher {
   }
 
   update() {
-    console.log("Watcher 属性更新了");
+    console.log("属性更新了");
     this.cb.call(this.vm, this.vm[this.key]);
   }
 }
 
 class ArrayWatcher {
   constructor(vm, option, cb) {
+      console.log(this);
       this.vm = vm;
       this.option = option;
       this.key = option.key;
@@ -189,24 +190,25 @@ class ArrayWatcher {
       Dep.target = this;
       // 触发getter，添加依赖
       // 处理list,i,a.b.c.d...这种情况
-      let res = this.vm[this.key][this.index];
-      let prop;
-      let paths = [...this.paths];// 复制一份
-      while (prop = paths.shift()) {
-        res = res[prop];
+      if (this.paths) {
+         let res = this.vm[this.key][this.index];
+         let prop;
+         while (prop = this.paths.shift()) {
+           res = res[prop];
+         }
       }
      
       Dep.target = null;
   }
 
   update() {
-    console.log("ArrayWatcher 数组的某一项的某个属性更新了");
-    if (this.paths.length) {
-       this.cb.call(this.vm, this.getValueVByPath(this.vm[this.key][this.index], this.paths));
-    }
+    console.log("数组的某一项的某个属性更新了");
+    this.cb.call(this.vm, this.getValueVByPath(this.vm[this.key][this.index], this.paths));
   }
 
-  getValueVByPath(obj, paths) {
+  getValueVByPath(obj, path) {
+    let paths = path.split('.');// [xxx, yyy, zzz]
+
     let res = obj;
     let prop;
     while(prop = paths.shift()) {

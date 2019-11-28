@@ -192,6 +192,7 @@ class Compile {
 
   forUpdater(value, options) {
     const {vm, target, tagName, identifier, bindKey, content} = options;
+    debugger;
     let lis = document.getElementsByTagName(tagName);
     let nodes = Array.prototype.filter.call(lis, (item) => {
       return item.identifier == identifier;
@@ -238,7 +239,7 @@ class Compile {
         }
         fragment.appendChild(li);
         this.insertAfter(fragment, nodes[nodesLen - 1]);
-
+        
         new ArrayWatcher(vm, {
           key: target,
           index: cursor,

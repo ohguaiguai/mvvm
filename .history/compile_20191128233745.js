@@ -168,6 +168,7 @@ class Compile {
           index: i,
           paths: content
         }, (value) => {
+          debugger;
           li.innerText = value;
         });
       }

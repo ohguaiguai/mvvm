@@ -115,7 +115,7 @@ class MVue {
     Object.defineProperty(obj, key, {
       get() {
         Dep.target && dep.addDep(Dep.target);
-        // console.log(`读取${key}`)
+        console.log(`读取${key}`)
         // console.log(Dep.target)
         return val;
       },
@@ -172,7 +172,7 @@ class Watcher {
   }
 
   update() {
-    console.log("Watcher 属性更新了");
+    console.log("Wather 属性更新了");
     this.cb.call(this.vm, this.vm[this.key]);
   }
 }
@@ -201,12 +201,16 @@ class ArrayWatcher {
 
   update() {
     console.log("ArrayWatcher 数组的某一项的某个属性更新了");
-    if (this.paths.length) {
-       this.cb.call(this.vm, this.getValueVByPath(this.vm[this.key][this.index], this.paths));
+    let paths = this.option.paths;
+    console.log(this.paths);
+    if (paths.length) {
+       this.cb.call(this.vm, this.getValueVByPath(this.vm[this.key][this.index], paths));
     }
   }
 
-  getValueVByPath(obj, paths) {
+  getValueVByPath(obj, path) {
+    let paths = path.split('.');// [xxx, yyy, zzz]
+
     let res = obj;
     let prop;
     while(prop = paths.shift()) {

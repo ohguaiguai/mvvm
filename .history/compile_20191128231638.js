@@ -192,38 +192,37 @@ class Compile {
 
   forUpdater(value, options) {
     const {vm, target, tagName, identifier, bindKey, content} = options;
+
     let lis = document.getElementsByTagName(tagName);
-    let nodes = Array.prototype.filter.call(lis, (item) => {
+    let nodes = Array.prototype.map.call(lis, (item) => {
       return item.identifier == identifier;
     });
     let node = nodes[0];
-    let nodesLen = nodes.length;
-    let valueLen = value.length;
-    let diffLen = Math.abs(nodesLen - valueLen);
+    let lisLen = nodes.length;
+    let listLen = value.length;
+    let diffLen = Math.abs(lisLen - listLen);
 
     let isObj = this.isObject(value[0]);
 
-    if (nodesLen == valueLen) {
-      for (let i = 0; i < Math.min(nodesLen, valueLen); i++) {
-        if (isObj) {
-          let val = this.getValueVByPath(value[i], content);
-          if (nodes[i].innerText != val) {
-            nodes[i].innerText = val;
-          }
-        } else {
-          if (nodes[i].innerText != value[i]) {
-            nodes[i].innerText = value[i];
-          }
+    for (let i = 0; i < Math.min(lisLen, listLen); i ++) {
+      if (isObj) {
+        let val = this.getValueVByPath(value[i], content);
+        if (lis[i].innerText != val) {
+          lis[i].innerText = val;
+        }
+      } else {
+        if (lis[i].innerText != value[i]) {
+          lis[i].innerText = value[i];
         }
       }
-    }
-    
-    if (nodesLen < valueLen) {
+    }   
+
+    if (lisLen < listLen) {
       const fragment = document.createDocumentFragment();
 
       for (let i = 0; i < diffLen; i++) {
         let li = document.createElement(node.tagName);
-        let cursor = nodesLen + i;
+        let cursor = lisLen + i;
 
         if (bindKey == 'index') {
           li.dataset.key = cursor;
@@ -237,7 +236,6 @@ class Compile {
           li.innerText = value[cursor];
         }
         fragment.appendChild(li);
-        this.insertAfter(fragment, nodes[nodesLen - 1]);
 
         new ArrayWatcher(vm, {
           key: target,
@@ -247,11 +245,12 @@ class Compile {
           li.innerText = value;
         });
       }
+      this.insertAfter(fragment, lis[lisLen - 1]);
     }
 
-    if (nodesLen > valueLen) {
+    if (lisLen > listLen) {
       for (let i = 0; i < diffLen; i++) {
-        node.parentNode.removeChild(nodes[nodes.length - 1]);
+        node.parentNode.removeChild(lis[lis.length - 1]);
       }
     }
   }

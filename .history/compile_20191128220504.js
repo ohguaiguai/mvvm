@@ -110,42 +110,28 @@ class Compile {
     let target = exp.match(/\bin\b\s+\b\w+\b/g)[0].replace('/\s+/g', '').replace('in', '').trim();
     // ['', '', '']  [{}, {}, {}]
     // index 或者 item.a.b.c
-    let bindRawKey = node.getAttribute('m-bind:key') || node.getAttribute(':key');
-    // {{item.a.b.c}} 插值部分 = > a.b.c   {{item.a}}
-    let rawContent = node.innerText.replace('{{', '').replace('}}', '').trim();
-
+    let bindContent = node.getAttribute('m-bind:key') || node.getAttribute(':key');
     let bindKey = '';
-    let content = '';
-
-    if (bindRawKey == 'index')  {
-      bindKey = 'index';
+    if (bindContent == 'index')  {
+        bindKey = 'index';
     } else {
-       let arr = bindRawKey.trim().split('.');
-       arr.shift();
-       bindKey = arr.join('.');
+      bindKey = bindContent.trim().split('.').shift().join('.');
     }
-  
-    let arr = rawContent.split('.');
-    if (arr.length > 1) {
-      arr.shift();
-      content = arr.join('.');
-    } else {
-      content = rawContent;
-    }
+    // item.a.b.c 插值部分 = > a.b.c
+    let content = node.innerText.replace('{{', '').replace('}}', '').trim().split('.').shift().join('.');
     /* let item_index = exp.match(/(\(\w+\,\s*\w+\)|\w+)/g)[0].replace(/(\s+|\(|\))/g, '').split(',');
     // item
     let item = item_index[0];
     // index
     let index = item_index[1]; */
     let value = vm[target];
-    let identifier = '';
-    let tagName = node.tagName;
-
-    let fragment = document.createDocumentFragment();
+    const fragment = document.createDocumentFragment();
+    let className = '';
 
     for (let i = 0; i < value.length; i++) {
       let li = document.createElement(node.tagName);
-      li.identifier = identifier = `mass-data-${target}`
+      className = `mass-data-${target}`
+      li.classList.add(...node.classList, className);
 
       if (this.isPrimitive(value[i])) {
         li.dataset.key = i;
@@ -153,6 +139,7 @@ class Compile {
       } 
 
       if (this.isObject(value[i])) {
+        isObj = true;
         if (bindKey == 'index') {
           li.dataset.key = i;
         } else {
@@ -180,10 +167,7 @@ class Compile {
     // 对 list 本身 做依赖收集
     new Watcher(vm, target, (value) => {
         this.forUpdater(value, {
-          vm,
-          target,
-          tagName,
-          identifier,
+          className,
           bindKey,
           content
         });
@@ -191,39 +175,36 @@ class Compile {
   }
 
   forUpdater(value, options) {
-    const {vm, target, tagName, identifier, bindKey, content} = options;
-    let lis = document.getElementsByTagName(tagName);
-    let nodes = Array.prototype.filter.call(lis, (item) => {
-      return item.identifier == identifier;
-    });
-    let node = nodes[0];
-    let nodesLen = nodes.length;
-    let valueLen = value.length;
-    let diffLen = Math.abs(nodesLen - valueLen);
+    const {bindKey, content, className} = options;
+
+    let lis = document.getElementsByClassName(className);
+    let node = lis[0];
+    let lisLen = lis.length;
+    let listLen = value.length;
+    let diffLen = Math.abs(lisLen - listLen);
 
     let isObj = this.isObject(value[0]);
 
-    if (nodesLen == valueLen) {
-      for (let i = 0; i < Math.min(nodesLen, valueLen); i++) {
-        if (isObj) {
-          let val = this.getValueVByPath(value[i], content);
-          if (nodes[i].innerText != val) {
-            nodes[i].innerText = val;
-          }
-        } else {
-          if (nodes[i].innerText != value[i]) {
-            nodes[i].innerText = value[i];
-          }
+    for (let i = 0; i < Math.min(lisLen, listLen); i ++) {
+      if (isObj) {
+        let val = this.getValueVByPath(value[i], content);
+        if (lis[i].innerText != val) {
+          lis[i].innerText = val;
+        }
+      } else {
+        if (lis[i].innerText != value[i]) {
+          lis[i].innerText = value[i];
         }
       }
-    }
-    
-    if (nodesLen < valueLen) {
+    }   
+
+    if (lisLen < listLen) {
       const fragment = document.createDocumentFragment();
 
       for (let i = 0; i < diffLen; i++) {
         let li = document.createElement(node.tagName);
-        let cursor = nodesLen + i;
+        li.classList.add(...node.classList);
+        let cursor = lisLen + i;
 
         if (bindKey == 'index') {
           li.dataset.key = cursor;
@@ -237,21 +218,13 @@ class Compile {
           li.innerText = value[cursor];
         }
         fragment.appendChild(li);
-        this.insertAfter(fragment, nodes[nodesLen - 1]);
-
-        new ArrayWatcher(vm, {
-          key: target,
-          index: cursor,
-          paths: content
-        }, (value) => {
-          li.innerText = value;
-        });
       }
+      this.insertAfter(fragment, lis[lisLen - 1]);
     }
 
-    if (nodesLen > valueLen) {
+    if (lisLen > listLen) {
       for (let i = 0; i < diffLen; i++) {
-        node.parentNode.removeChild(nodes[nodes.length - 1]);
+        node.parentNode.removeChild(lis[lis.length - 1]);
       }
     }
   }

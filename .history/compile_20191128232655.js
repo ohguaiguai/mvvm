@@ -192,8 +192,9 @@ class Compile {
 
   forUpdater(value, options) {
     const {vm, target, tagName, identifier, bindKey, content} = options;
+    debugger;
     let lis = document.getElementsByTagName(tagName);
-    let nodes = Array.prototype.filter.call(lis, (item) => {
+    let nodes = Array.prototype.map.call(nodes, (item) => {
       return item.identifier == identifier;
     });
     let node = nodes[0];
@@ -203,21 +204,19 @@ class Compile {
 
     let isObj = this.isObject(value[0]);
 
-    if (nodesLen == valueLen) {
-      for (let i = 0; i < Math.min(nodesLen, valueLen); i++) {
-        if (isObj) {
-          let val = this.getValueVByPath(value[i], content);
-          if (nodes[i].innerText != val) {
-            nodes[i].innerText = val;
-          }
-        } else {
-          if (nodes[i].innerText != value[i]) {
-            nodes[i].innerText = value[i];
-          }
+    for (let i = 0; i < Math.min(nodesLen, valueLen); i ++) {
+      if (isObj) {
+        let val = this.getValueVByPath(value[i], content);
+        if (nodes[i].innerText != val) {
+          nodes[i].innerText = val;
+        }
+      } else {
+        if (nodes[i].innerText != value[i]) {
+          nodes[i].innerText = value[i];
         }
       }
-    }
-    
+    }   
+
     if (nodesLen < valueLen) {
       const fragment = document.createDocumentFragment();
 
@@ -237,7 +236,6 @@ class Compile {
           li.innerText = value[cursor];
         }
         fragment.appendChild(li);
-        this.insertAfter(fragment, nodes[nodesLen - 1]);
 
         new ArrayWatcher(vm, {
           key: target,
@@ -247,6 +245,7 @@ class Compile {
           li.innerText = value;
         });
       }
+      this.insertAfter(fragment, nodes[nodesLen - 1]);
     }
 
     if (nodesLen > valueLen) {
