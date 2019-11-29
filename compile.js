@@ -223,8 +223,8 @@ class Compile {
 
       for (let i = 0; i < diffLen; i++) {
         let li = document.createElement(node.tagName);
+        li.identifier  = identifier;
         let cursor = nodesLen + i;
-
         if (bindKey == 'index') {
           li.dataset.key = cursor;
         } else {

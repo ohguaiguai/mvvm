@@ -67,7 +67,10 @@ class MVue {
     this.def(value, '__dep__', dep);
     Object.defineProperty(obj, key, {
       get() {
-        Dep.target && dep.addDep(Dep.target);
+        // !Dep.target.option ： 当对某一个元素依赖收集的时候不再重复添加依赖
+        if (Dep.target && !Dep.target.option)  {
+          Dep.target && dep.addDep(Dep.target);
+        };
         // console.log(`读取${key}`);
         return value;
       },
