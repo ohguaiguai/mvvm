@@ -67,7 +67,7 @@ class MVue {
     this.def(value, '__dep__', dep);
     Object.defineProperty(obj, key, {
       get() {
-        // !Dep.target.option ： 当对某一个元素依赖收集的时候不再重复添加依赖
+        // !Dep.target.option ： 当对某一个元素依赖收集的时候防止对list添加多余的依赖
         if (Dep.target && !Dep.target.option)  {
           Dep.target && dep.addDep(Dep.target);
         };
